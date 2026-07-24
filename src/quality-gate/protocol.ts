@@ -261,6 +261,3 @@ export function getAllPhaseGates(): GateDefinition[] {
   ];
 }
 
-export function getGatesForPhase(phase: Phase): GateDefinition {
-  return QUALITY_GATE_PROTOCOL.gates[phase];
-}

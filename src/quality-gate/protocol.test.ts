@@ -4,7 +4,6 @@ import {
   getGate,
   getChecklist,
   getAllPhaseGates,
-  getGatesForPhase,
 } from "./protocol";
 import type { Phase } from "../comparison-engine/types";
 import type { ArtifactType } from "./types";
@@ -121,9 +120,4 @@ describe("getAllPhaseGates", () => {
   });
 });
 
-describe("getGatesForPhase", () => {
-  it("returns the artifacts checked at a given phase gate", () => {
-    const phase = getGatesForPhase("開発+単体テスト");
-    expect(phase.artifactsChecked).toContain("テスト仕様書");
-  });
-});
+
