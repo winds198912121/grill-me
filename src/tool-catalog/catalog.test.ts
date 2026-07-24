@@ -60,8 +60,8 @@ describe("TOOL_CATALOG", () => {
     expect(TOOL_CATALOG.capabilities.tierA.approvalStatus).toBe("要申請");
   });
 
-  it("Tier B has shared IDs available for evaluation", () => {
-    expect(TOOL_CATALOG.capabilities.tierB.approvalStatus).toBe("共有IDあり");
+  it("Tier B requires evaluation (shared IDs available)", () => {
+    expect(TOOL_CATALOG.capabilities.tierB.approvalStatus).toBe("評価要(共有IDあり)");
   });
 
   it("every tier has at least one strength and one limitation", () => {

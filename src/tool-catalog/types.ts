@@ -7,7 +7,7 @@
 import type { Tier } from "../comparison-engine/types";
 
 export type PrecisionLevel = "最高" | "高" | "中" | "低" | "なし";
-export type ApprovalStatus = "承認済み" | "要申請" | "共有IDあり" | "該当なし";
+export type ApprovalStatus = "承認済み" | "要申請" | "評価要(共有IDあり)" | "該当なし";
 export type MaturityLevel = "実用段階" | "GA前(2026 Q3)" | "補助ツール" | "なし";
 
 export type Deliverable =

@@ -83,7 +83,7 @@ const TIER_B: ToolCapability = {
     billingModel: "未定",
     note: "SAPに確認要。Joule Studioは無償の可能性あり（開発者・アプリ実行は従量制と発表）。",
   },
-  approvalStatus: "共有IDあり",
+  approvalStatus: "評価要(共有IDあり)",
   supportedDeliverables: [
     "要件定義書",
     "設計書・マッピングシート",
