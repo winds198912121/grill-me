@@ -2,7 +2,8 @@
  * Cost Comparison Engine — Seam 1
  *
  * Pure functions: scope × phases × rates × AI compression → cost comparison.
- * All monetary values in Japanese yen (¥), rounded to nearest 10,000.
+ * All monetary values in Japanese yen (¥).
+ * Per-phase aiCost is exact (unrounded); totals are rounded to nearest ¥10,000.
  */
 
 import type {
@@ -14,15 +15,19 @@ import type {
   PhaseEstimate,
   TierSummary,
   ComparisonResult,
+  LicenseCosts,
 } from "./types";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-/** Daily rates. monthly / 20 working days = daily. */
-export const RATES = {
+/** Billing rates. monthly / 20 working days = daily. */
+export const ROLE_RATES = {
   consultant: { monthly: 1_500_000, daily: 75_000 },
   se: { monthly: 1_000_000, daily: 50_000 },
 } as const;
+
+/** Traditional cost per interface (all 3 phases, 35 person-days). */
+export const TRADITIONAL_COST_PER_INTERFACE = 2_000_000;
 
 /** Billable phases (excludes 結合テスト+UAT which is client responsibility). */
 export const PHASES: PhaseConfig[] = [
@@ -67,10 +72,20 @@ export const TIER_LABELS: Record<Tier, string> = {
   tierC: "Tier C (Copilot)",
 };
 
+/** Monthly license costs per user ID. Negligible vs. labor savings. */
+export const LICENSE_COSTS: Record<Tier, LicenseCosts> = {
+  traditional: { monthlyPerId: 0, note: "ツールなし" },
+  tierA: { monthlyPerId: 30_000, note: "最大$200/月/ID" },
+  tierB: { monthlyPerId: 0, note: "未定 (SAP要確認)" },
+  tierC: { monthlyPerId: 3_000, note: "$20/月/ID" },
+};
+
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 const dailyRate = (role: Role): number =>
-  role === "consultant" ? RATES.consultant.daily : RATES.se.daily;
+  role === "consultant"
+    ? ROLE_RATES.consultant.daily
+    : ROLE_RATES.se.daily;
 
 const roundTo10k = (n: number): number => Math.round(n / 10_000) * 10_000;
 
@@ -78,6 +93,7 @@ const roundTo10k = (n: number): number => Math.round(n / 10_000) * 10_000;
 
 /**
  * Compute a single phase estimate for a given tier.
+ * Phase-level aiCost is exact (unrounded); totals are rounded once.
  */
 export function calculatePhaseEstimate(
   phaseConfig: PhaseConfig,
@@ -99,8 +115,8 @@ export function calculatePhaseEstimate(
     traditionalCost: tradCost,
     aiPersonDays: aiDays,
     aiCost: {
-      min: roundTo10k(aiDays.min * rate),
-      max: roundTo10k(aiDays.max * rate),
+      min: aiDays.min * rate,
+      max: aiDays.max * rate,
     },
     compressionRatio: {
       min: Math.round(compressionMin * 100) / 100,
@@ -111,6 +127,7 @@ export function calculatePhaseEstimate(
 
 /**
  * Calculate per-interface summary for a single tier (all 3 phases summed).
+ * Total cost is rounded once from the raw phase sum.
  */
 export function calculatePerInterface(tier: Tier): TierSummary {
   const phaseBreakdown = PHASES.map((p) => calculatePhaseEstimate(p, tier));
@@ -120,12 +137,21 @@ export function calculatePerInterface(tier: Tier): TierSummary {
     max: phaseBreakdown.reduce((s, p) => s + p.aiPersonDays.max, 0),
   };
 
+  const rawMin = phaseBreakdown.reduce((s, p) => s + p.aiCost.min, 0);
+  const rawMax = phaseBreakdown.reduce((s, p) => s + p.aiCost.max, 0);
+
   const totalCost: CompressionRange = {
-    min: roundTo10k(phaseBreakdown.reduce((s, p) => s + p.aiCost.min, 0)),
-    max: roundTo10k(phaseBreakdown.reduce((s, p) => s + p.aiCost.max, 0)),
+    min: roundTo10k(rawMin),
+    max: roundTo10k(rawMax),
   };
 
-  return { tier, phaseBreakdown, totalPersonDays, totalCost };
+  return {
+    tier,
+    phaseBreakdown,
+    totalPersonDays,
+    totalCost,
+    licenseCosts: LICENSE_COSTS[tier],
+  };
 }
 
 /**
@@ -133,7 +159,10 @@ export function calculatePerInterface(tier: Tier): TierSummary {
  */
 export function calculateComparison(interfaceCount: number): ComparisonResult {
   const tiers = {
-    traditional: scaleTier(calculatePerInterface("traditional"), interfaceCount),
+    traditional: scaleTier(
+      calculatePerInterface("traditional"),
+      interfaceCount,
+    ),
     tierA: scaleTier(calculatePerInterface("tierA"), interfaceCount),
     tierB: scaleTier(calculatePerInterface("tierB"), interfaceCount),
     tierC: scaleTier(calculatePerInterface("tierC"), interfaceCount),
@@ -153,6 +182,7 @@ function scaleTier(summary: TierSummary, count: number): TierSummary {
       })),
       totalPersonDays: { min: 0, max: 0 },
       totalCost: { min: 0, max: 0 },
+      licenseCosts: summary.licenseCosts,
     };
   }
 
@@ -174,13 +204,6 @@ function scaleTier(summary: TierSummary, count: number): TierSummary {
       min: roundTo10k(summary.totalCost.min * count),
       max: roundTo10k(summary.totalCost.max * count),
     },
+    licenseCosts: summary.licenseCosts,
   };
-}
-
-/**
- * Quick traditional total for N interfaces (no AI).
- * ¥2,000,000 per interface × N.
- */
-export function computeTraditionalTotal(count: number): number {
-  return 2_000_000 * count;
 }

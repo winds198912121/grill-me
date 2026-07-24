@@ -20,15 +20,10 @@ export interface CompressionRange {
   max: number;
 }
 
-/** Per-tier compression ratio per phase (0 = no compression, 1 = 100% reduction) */
-export type TierCompression = Record<Tier, Record<Phase, CompressionRange>>;
-
-export interface MonthlyRate {
-  monthly: number;
-  daily: number;
+export interface LicenseCosts {
+  monthlyPerId: number;
+  note: string;
 }
-
-export type RoleRates = Record<Role, MonthlyRate>;
 
 export interface PhaseEstimate {
   phase: Phase;
@@ -45,6 +40,7 @@ export interface TierSummary {
   phaseBreakdown: PhaseEstimate[];
   totalPersonDays: CompressionRange;
   totalCost: CompressionRange;
+  licenseCosts: LicenseCosts;
 }
 
 export interface ComparisonResult {
