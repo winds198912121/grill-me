@@ -176,10 +176,10 @@ describe("calculatePhaseEstimate — Tier B", () => {
     expect(r.compressionRatio.max).toBe(0.6);
   });
 
-  it("基本設計: 1.5–2.5 days, ¥75,000–125,000 (50–70% compression)", () => {
+  it("基本設計: 3.5–4.5日, ¥175,000–225,000 (10–30% compression)", () => {
     const r = calculatePhaseEstimate(PHASES[1], "tierB");
-    expect(r.aiPersonDays).toEqual({ min: 1.5, max: 2.5 });
-    expect(r.aiCost).toEqual({ min: 75_000, max: 125_000 });
+    expect(r.aiPersonDays).toEqual({ min: 3.5, max: 4.5 });
+    expect(r.aiCost).toEqual({ min: 175_000, max: 225_000 });
   });
 
   it("開発+単体テスト: 7–12 days, ¥350,000–600,000 (40–65% compression)", () => {
@@ -221,20 +221,20 @@ describe("calculatePerInterface", () => {
     expect(r.totalCost).toEqual({ min: 550_000, max: 550_000 });
   });
 
-  it("Tier B per I/F: 12.5–20.5 days, ¥730,000–1,180,000", () => {
+  it("Tier B per I/F: 14.5–22.5 days, ¥830,000–1,280,000", () => {
     const r = calculatePerInterface("tierB");
-    expect(r.totalPersonDays).toEqual({ min: 12.5, max: 20.5 });
-    // raw: 300+75+350=725k→730k, 450+125+600=1,175k→1,180k
-    expect(r.totalCost.min).toBe(730_000);
-    expect(r.totalCost.max).toBe(1_180_000);
+    expect(r.totalPersonDays).toEqual({ min: 14.5, max: 22.5 });
+    // raw: 300+175+350=825k→830k, 450+225+600=1,275k→1,280k
+    expect(r.totalCost.min).toBe(830_000);
+    expect(r.totalCost.max).toBe(1_280_000);
   });
 
-  it("Tier C per I/F: 20.5–26.5 days, ¥1,180,000–1,530,000", () => {
+  it("Tier C per I/F: 22–28 days, ¥1,250,000–1,600,000", () => {
     const r = calculatePerInterface("tierC");
-    expect(r.totalPersonDays).toEqual({ min: 20.5, max: 26.5 });
-    // raw: 450+125+600=1,175k→1,180k, 600+175+750=1,525k→1,530k
-    expect(r.totalCost.min).toBe(1_180_000);
-    expect(r.totalCost.max).toBe(1_530_000);
+    expect(r.totalPersonDays).toEqual({ min: 22, max: 28 });
+    // raw: 450+200+600=1,250k→1,250k, 600+250+750=1,600k→1,600k
+    expect(r.totalCost.min).toBe(1_250_000);
+    expect(r.totalCost.max).toBe(1_600_000);
   });
 
   it("cost ordering: traditional max > Tier C max > Tier B max > Tier A max", () => {

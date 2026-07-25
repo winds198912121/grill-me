@@ -54,12 +54,12 @@ const AI_PERSON_DAYS: Record<Tier, Record<Phase, CompressionRange>> = {
   },
   tierB: {
     要件定義: { min: 4, max: 6 },
-    基本設計: { min: 1.5, max: 2.5 },
+    基本設計: { min: 3.5, max: 4.5 },
     "開発+単体テスト": { min: 7, max: 12 },
   },
   tierC: {
     要件定義: { min: 6, max: 8 },
-    基本設計: { min: 2.5, max: 3.5 },
+    基本設計: { min: 4, max: 5 },
     "開発+単体テスト": { min: 12, max: 15 },
   },
 };
