@@ -1,0 +1,165 @@
+*&---------------------------------------------------------------------*
+*& Report ZSD_SALESORDER_CREATE
+*& AI-Generated ABAP Code — PoC Sample (生成方法: Claude Code)
+*& Interface: IF-SD-001 受注伝票登録 (Salesforce → SAP S/4HANA)
+*& Generated: 2026-07-25
+*& Reviewed: SE review passed (CD checklist)
+*&---------------------------------------------------------------------*
+REPORT zsd_salesorder_create.
+
+* --- Data Declarations ---
+DATA:
+  lv_salesdocument TYPE bapivbeln-vbeln,
+  lv_error         TYPE flag VALUE abap_false,
+  lv_message       TYPE bapi_msg.
+
+* BAPI header structure
+DATA: ls_order_header_in TYPE bapisdhd1.
+
+* BAPI item table
+DATA: lt_order_items_in  TYPE TABLE OF bapisditm,
+      ls_order_item      TYPE bapisditm.
+
+* BAPI partner table
+DATA: lt_order_partners  TYPE TABLE OF bapiparnr,
+      ls_order_partner   TYPE bapiparnr.
+
+* BAPI return table
+DATA: lt_return          TYPE TABLE OF bapiret2,
+      ls_return          TYPE bapiret2.
+
+* Error queue
+DATA: ls_err_queue       TYPE zsd_err_queue.
+* --- End Data Declarations ---
+
+*&---------------------------------------------------------------------*
+*& Form: FILL_HEADER_DATA
+*& Fill BAPI header structure from Salesforce input
+*&---------------------------------------------------------------------*
+FORM fill_header_data.
+
+* Clear structures
+  CLEAR: ls_order_header_in, ls_order_partner.
+
+* Header data mapping (ref: 設計書 §2.1)
+  ls_order_header_in-sales_org   = p_sorg.     " SALES_ORG
+  ls_order_header_in-distr_chan  = p_dchan.     " DISTR_CHAN
+  ls_order_header_in-division    = p_div.       " DIVISION
+  ls_order_header_in-doc_type    = 'TA'.        " 標準受注伝票タイプ
+  ls_order_header_in-doc_date    = p_docdt.      " DOC_DATE (DATS形式)
+  ls_order_header_in-purch_no_c  = p_purch.      " PURCH_NO
+  ls_order_header_in-purch_date  = p_purdt.      " PURCH_DATE
+  ls_order_header_in-req_date_h  = p_reqdt.      " REQ_DATE
+  ls_order_header_in-currency    = p_currc.      " CURRENCY
+  ls_order_header_in-sales_office = p_soffc.     " SALES_OFFICE
+
+* Partner data (ref: 設計書 §2.3)
+* Sold-to party (AG)
+  ls_order_partner-partn_role = 'AG'.
+  ls_order_partner-partn_numb = p_kunnr.         " SOLD_TO
+  APPEND ls_order_partner TO lt_order_partners.
+
+* Ship-to party (WE)
+  ls_order_partner-partn_role = 'WE'.
+  ls_order_partner-partn_numb = p_shpto.         " SHIP_TO
+  APPEND ls_order_partner TO lt_order_partners.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form: FILL_ITEM_DATA
+*& Fill BAPI item table from Salesforce input (ref: 設計書 §2.2)
+*&---------------------------------------------------------------------*
+FORM fill_item_data.
+
+  CLEAR: ls_order_item, lt_order_items_in[].
+
+  ls_order_item-itm_number = '000010'.           " ITEM_NO (10刻み)
+  ls_order_item-material   = p_matnr.            " MATERIAL (上位桁ゼロ埋め済)
+  ls_order_item-plant      = p_werks.            " PLANT
+  ls_order_item-target_qty = p_kwmeng.           " QUANTITY (QUAN 13,3)
+  ls_order_item-sales_unit = p_vrkme.            " UNIT
+  ls_order_item-store_loc  = p_lgort.            " STGE_LOC
+  APPEND ls_order_item TO lt_order_items_in.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form: CREATE_SALES_ORDER
+*& Call BAPI and handle response
+*&---------------------------------------------------------------------*
+FORM create_sales_order.
+
+* BAPI call
+  CALL FUNCTION 'BAPI_SALESORDER_CREATEFROMDAT2'
+    EXPORTING
+      order_header_in = ls_order_header_in
+    IMPORTING
+      salesdocument   = lv_salesdocument
+    TABLES
+      return          = lt_return
+      order_items_in  = lt_order_items_in
+      order_partners  = lt_order_partners.
+
+* Error check: loop RETURN table for type E (Error) or A (Abort)
+  LOOP AT lt_return INTO ls_return
+    WHERE type = 'E' OR type = 'A'.
+
+    lv_error = abap_true.
+
+* Log to application log (SLG1)
+    CALL FUNCTION 'BAL_LOG_MSG_ADD'
+      EXPORTING
+        i_msgty = ls_return-type
+        i_msgid = ls_return-id
+        i_msgno = ls_return-number
+        i_msgv1 = ls_return-message_v1
+        i_msgv2 = ls_return-message_v2.
+
+* Store in error queue for retry
+    CLEAR ls_err_queue.
+    ls_err_queue-errid    = ls_return-id.
+    ls_err_queue-errno    = ls_return-number.
+    ls_err_queue-message  = ls_return-message.
+    ls_err_queue-sorg     = p_sorg.
+    ls_err_queue-kunnr    = p_kunnr.
+    ls_err_queue-timestamp = sy-datum && sy-uzeit.
+    INSERT zsd_err_queue FROM ls_err_queue.
+
+    EXIT.  " Exit loop on first error
+  ENDLOOP.
+
+* Check SY-SUBRC
+  IF lv_error = abap_true.
+* Rollback — discard all changes
+    CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    lv_message = |Error: 受注伝票登録失敗 — { ls_return-id }/{ ls_return-number }|.
+    RETURN.
+  ENDIF.
+
+* Commit — persist the sales order
+  CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+    EXPORTING
+      wait = 'X'.
+
+* Success message with generated document number
+  CONCATENATE '受注伝票' lv_salesdocument '登録完了' INTO lv_message
+    SEPARATED BY space.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& MAIN
+*&---------------------------------------------------------------------*
+START-OF-SELECTION.
+
+  PERFORM fill_header_data.
+  PERFORM fill_item_data.
+  PERFORM create_sales_order.
+
+* Return result to calling program (RFC response to Salesforce)
+  IF lv_error = abap_true.
+    WRITE: / 'ERROR:', lv_message.
+  ELSE.
+    WRITE: / 'SUCCESS:', lv_message.
+  ENDIF.
