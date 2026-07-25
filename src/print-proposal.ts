@@ -27,6 +27,9 @@ const fmt = (n: number): string => {
 
 const tierOrder: Tier[] = ["traditional", "tierA", "tierB", "tierC"];
 
+const range = (min: number, max: number): string => min === max ? `${min}` : `${min}–${max}`;
+const rangeYen = (min: number, max: number): string => min === max ? fmt(min) : `${fmt(min)}–${fmt(max)}`;
+
 function print() {
   const cmp = calculateComparison(INTERFACE_COUNT);
   const lines: string[] = [];
@@ -164,7 +167,7 @@ function print() {
       ? `¥${t.licenseCosts.monthlyPerId.toLocaleString()}/月/ID`
       : t.licenseCosts.note;
     lines.push(
-      `| ${TIER_LABELS[tier]} | ${t.totalPersonDays.max.toLocaleString()}人日 | ${fmt(t.totalCost.min)}–${fmt(t.totalCost.max)} | ${saving} | ${license} |`
+      `| ${TIER_LABELS[tier]} | ${t.totalPersonDays.max.toLocaleString()}人日 | ${rangeYen(t.totalCost.min, t.totalCost.max)} | ${saving} | ${license} |`
     );
   }
   lines.push("");
@@ -192,12 +195,12 @@ function print() {
 
     const role = trad.role === "consultant" ? "ｺﾝｻﾙ" : "SE";
     lines.push(
-      `| ${phase} | ${role} | ${trad.traditionalPersonDays}日(${fmt(trad.traditionalCost)}) | ${tA.aiPersonDays.min}–${tA.aiPersonDays.max}日(${fmt(tA.aiCost.min)}–${fmt(tA.aiCost.max)}) | ${tB.aiPersonDays.min}–${tB.aiPersonDays.max}日(${fmt(tB.aiCost.min)}–${fmt(tB.aiCost.max)}) | ${tC.aiPersonDays.min}–${tC.aiPersonDays.max}日(${fmt(tC.aiCost.min)}–${fmt(tC.aiCost.max)}) |`
+      `| ${phase} | ${role} | ${trad.traditionalPersonDays}日(${fmt(trad.traditionalCost)}) | ${range(tA.aiPersonDays.min, tA.aiPersonDays.max)}日(${rangeYen(tA.aiCost.min, tA.aiCost.max)}) | ${range(tB.aiPersonDays.min, tB.aiPersonDays.max)}日(${rangeYen(tB.aiCost.min, tB.aiCost.max)}) | ${range(tC.aiPersonDays.min, tC.aiPersonDays.max)}日(${rangeYen(tC.aiCost.min, tC.aiCost.max)}) |`
     );
   }
   // Total row (per-interface)
   lines.push(
-    `| **合計** | | **${perIface.traditional.totalPersonDays.max}日(${fmt(perIface.traditional.totalCost.min)})** | **${perIface.tierA.totalPersonDays.min}–${perIface.tierA.totalPersonDays.max}日(${fmt(perIface.tierA.totalCost.min)}–${fmt(perIface.tierA.totalCost.max)})** | **${perIface.tierB.totalPersonDays.min}–${perIface.tierB.totalPersonDays.max}日(${fmt(perIface.tierB.totalCost.min)}–${fmt(perIface.tierB.totalCost.max)})** | **${perIface.tierC.totalPersonDays.min}–${perIface.tierC.totalPersonDays.max}日(${fmt(perIface.tierC.totalCost.min)}–${fmt(perIface.tierC.totalCost.max)})** |`
+    `| **合計** | | **${perIface.traditional.totalPersonDays.max}日(${fmt(perIface.traditional.totalCost.min)})** | **${range(perIface.tierA.totalPersonDays.min, perIface.tierA.totalPersonDays.max)}日(${rangeYen(perIface.tierA.totalCost.min, perIface.tierA.totalCost.max)})** | **${range(perIface.tierB.totalPersonDays.min, perIface.tierB.totalPersonDays.max)}日(${rangeYen(perIface.tierB.totalCost.min, perIface.tierB.totalCost.max)})** | **${range(perIface.tierC.totalPersonDays.min, perIface.tierC.totalPersonDays.max)}日(${rangeYen(perIface.tierC.totalCost.min, perIface.tierC.totalCost.max)})** |`
   );
   lines.push("");
   lines.push("---");
