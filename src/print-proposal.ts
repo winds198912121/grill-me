@@ -215,13 +215,25 @@ function print() {
 
   // Core logic: one simple comparison, one unit
   lines.push("```");
-  lines.push("【前提】1本のI/F = 要件10日 + 設計5日 + 開発20日 = 35人日");
-  lines.push(`         ｺﾝｻﾙ単価 = 7.5万円/日, SE単価 = 5.0万円/日`);
-  lines.push(`         1本あたり 35人日 × 加重平均 ≈ 200万円`);
+  const p1 = perIface.traditional.phaseBreakdown[0];
+  const p2 = perIface.traditional.phaseBreakdown[1];
+  const p3 = perIface.traditional.phaseBreakdown[2];
+
+  lines.push("【Step 1】1本のI/Fを作るのにかかる工数と費用（従来型）");
   lines.push("");
-  lines.push("【従来】200万円 × 1,200本 = 24.0億円");
-  lines.push(`【Tier A】 ${fmt(perIface.tierA.totalCost.min)} × 1,200本 = ${fmt(tA_cost.min)} （${tA_days.min}人日/I/F）`);
-  lines.push(`【差額】  24.0億円 − ${fmt(tA_cost.min)} = ${fmt(tA_save)} の削減（${Math.round(tA_save/tradCost*100)}%）`);
+  lines.push(`  要件定義（ｺﾝｻﾙ）: ${p1.traditionalPersonDays}日 × 7.5万円 = ${fmt(p1.traditionalCost)}`);
+  lines.push(`  基設計（SE）:      ${p2.traditionalPersonDays}日 × 5.0万円 = ${fmt(p2.traditionalCost)}`);
+  lines.push(`  開発+単体（SE）:    ${p3.traditionalPersonDays}日 × 5.0万円 = ${fmt(p3.traditionalCost)}`);
+  lines.push(`  ─────────────────────────────`);
+  lines.push(`  1本あたり合計       ${p1.traditionalPersonDays + p2.traditionalPersonDays + p3.traditionalPersonDays}人日           ${fmt(perIface.traditional.totalCost.min)}`);
+  lines.push("");
+  lines.push(`【Step 2】1,200本にかける`);
+  lines.push(`  ${fmt(perIface.traditional.totalCost.min)} × 1,200本 = ${fmt(tradCost)}`);
+  lines.push("");
+  lines.push(`【Step 3】AI（Tier A）で同じ計算をすると`);
+  lines.push(`  1本 ${fmt(perIface.tierA.totalCost.min)} × 1,200本 = ${fmt(tA_cost.min)} （${tA_days.min}人日/I/F）`);
+  lines.push("");
+  lines.push(`【差額】${fmt(tradCost)} − ${fmt(tA_cost.min)} = ${fmt(tA_save)} の削減（${Math.round(tA_save/tradCost*100)}%）`);
   lines.push("```");
   lines.push("");
 
