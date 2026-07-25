@@ -26,11 +26,22 @@ flowchart TB
     MD["マスタデータ管理画面<br/>Master Data Mgmt"]
   end
 
-  subgraph Hub["データ連携基盤 | 約1,200I/F"]
-    direction LR
+  subgraph BTP["SAP BTP (Middleware | マッピング・連携基盤)"]
+    direction TB
+    subgraph BTP_IF["約1,200 I/F (Integration Suite / CPI)"]
     IF1["会計I/F<br/>約840本<br/>仕訳伝票・債権債務"]
     IF2["販売I/F<br/>受注伝票・出荷"]
     IF3["購買I/F・マスタI/F<br/>発注伝票・得意先/仕入先"]
+    end
+    subgraph BTP_API["API Management"]
+    API1["Salesforce ↔ BTP<br/>REST/SOAP API"]
+    API2["BTP ↔ S/4HANA<br/>RFC/BAPI/IDoc"]
+    end
+    subgraph BTP_MAP["マッピング・変換"]
+    MAP1["項目マッピング<br/>Salesforce項目→SAP項目"]
+    MAP2["データ型変換<br/>日付・コード・単位"]
+    MAP3["エラーハンドリング<br/>再送・キュー管理"]
+    end
   end
 
   subgraph SAP["SAP S/4HANA 層"]
@@ -57,21 +68,32 @@ flowchart TB
   SU --> PO
   SU --> MD
   AU --> SAP
-  SO --> IF1
-  SO --> IF2
-  PO --> IF3
-  MD --> IF3
-  IF1 --> FI
-  IF2 --> SD
-  IF3 --> MM
-  IF3 --> MDM
-  AI -.-> Hub
+  SO --> API1
+  PO --> API1
+  MD --> API1
+  API1 --> MAP1
+  MAP1 --> MAP2
+  MAP2 --> IF1
+  MAP2 --> IF2
+  MAP2 --> IF3
+  IF1 --> API2
+  IF2 --> API2
+  IF3 --> API2
+  API2 --> FI
+  API2 --> SD
+  API2 --> MM
+  API2 --> MDM
+  MAP3 -.-> API1
+  AI -.-> BTP
   Gates -.-> SF
   Gates -.-> SAP
 
   style Users fill:#e1f5fe
   style SF fill:#fff9c4
-  style Hub fill:#ffccbc
+  style BTP fill:#ffccbc
+  style BTP_IF fill:#ffe0b2
+  style BTP_API fill:#ffecb3
+  style BTP_MAP fill:#fff3e0
   style SAP fill:#c8e6c9
   style AI fill:#e1bee7
   style Gates fill:#bdbdbd
@@ -81,7 +103,8 @@ flowchart TB
 
 - **1,800人の営業担当者はSalesforceのみを操作**し、SAPを直接触らない
 - **経理担当者のみSAP画面を直接利用**（会計業務）
-- **約1,200本のI/F**がSalesforceとSAP間のデータ連携を担う（本プロジェクトの主要開発対象）
+- **SAP BTP** が Salesforce と S/4HANA 間の Middleware。API Management / Integration Suite / マッピング変換を担う
+- **約1,200本のI/F**がBTP上でデータ連携を実行（本プロジェクトの主要開発対象）
 - **AI支援開発パイプライン**が全フェーズ（要件定義〜テスト）を効率化
 - **3つの品質ゲート**でAI生成成果物を人間がレビュー・承認
 
