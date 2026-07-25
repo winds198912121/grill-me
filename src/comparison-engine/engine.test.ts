@@ -143,28 +143,25 @@ describe("calculatePhaseEstimate — traditional", () => {
 // ── calculatePhaseEstimate: Tier A ──
 
 describe("calculatePhaseEstimate — Tier A", () => {
-  it("要件定義: 2–3 days, ¥150,000–225,000 (70–80% compression)", () => {
+  it("要件定義: 2日, ¥150,000 (80% compression)", () => {
     const r = calculatePhaseEstimate(PHASES[0], "tierA");
-    expect(r.aiPersonDays).toEqual({ min: 2, max: 3 });
-    expect(r.aiCost).toEqual({ min: 150_000, max: 225_000 });
-    expect(r.compressionRatio.min).toBe(0.7);
-    expect(r.compressionRatio.max).toBe(0.8);
+    expect(r.aiPersonDays).toEqual({ min: 2, max: 2 });
+    expect(r.aiCost).toEqual({ min: 150_000, max: 150_000 });
+    expect(r.compressionRatio).toEqual({ min: 0.8, max: 0.8 });
   });
 
-  it("基設計: 0.5–1 day, ¥25,000–50,000 (80–90% compression)", () => {
+  it("基設計: 3日, ¥150,000 (40% compression)", () => {
     const r = calculatePhaseEstimate(PHASES[1], "tierA");
-    expect(r.aiPersonDays).toEqual({ min: 0.5, max: 1 });
-    expect(r.aiCost).toEqual({ min: 25_000, max: 50_000 });
-    expect(r.compressionRatio.min).toBe(0.8);
-    expect(r.compressionRatio.max).toBe(0.9);
+    expect(r.aiPersonDays).toEqual({ min: 3, max: 3 });
+    expect(r.aiCost).toEqual({ min: 150_000, max: 150_000 });
+    expect(r.compressionRatio).toEqual({ min: 0.4, max: 0.4 });
   });
 
-  it("開発+単体テスト: 3–5 days, ¥150,000–250,000 (75–85% compression)", () => {
+  it("開発+単体テスト: 5日, ¥250,000 (75% compression)", () => {
     const r = calculatePhaseEstimate(PHASES[2], "tierA");
-    expect(r.aiPersonDays).toEqual({ min: 3, max: 5 });
-    expect(r.aiCost).toEqual({ min: 150_000, max: 250_000 });
-    expect(r.compressionRatio.min).toBe(0.75);
-    expect(r.compressionRatio.max).toBe(0.85);
+    expect(r.aiPersonDays).toEqual({ min: 5, max: 5 });
+    expect(r.aiCost).toEqual({ min: 250_000, max: 250_000 });
+    expect(r.compressionRatio).toEqual({ min: 0.75, max: 0.75 });
   });
 });
 
@@ -217,12 +214,11 @@ describe("calculatePerInterface", () => {
     });
   });
 
-  it("Tier A per I/F: 5.5–9 days, ¥330,000–530,000", () => {
+  it("Tier A per I/F: 10日, ¥550,000", () => {
     const r = calculatePerInterface("tierA");
-    expect(r.totalPersonDays).toEqual({ min: 5.5, max: 9 });
-    // raw: 150+25+150=325k→330k, 225+50+250=525k→530k
-    expect(r.totalCost.min).toBe(330_000);
-    expect(r.totalCost.max).toBe(530_000);
+    expect(r.totalPersonDays).toEqual({ min: 10, max: 10 });
+    // raw: 150+150+250=550k
+    expect(r.totalCost).toEqual({ min: 550_000, max: 550_000 });
   });
 
   it("Tier B per I/F: 12.5–20.5 days, ¥730,000–1,180,000", () => {
