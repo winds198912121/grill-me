@@ -7,7 +7,7 @@
  */
 
 import { writeFileSync } from "node:fs";
-import { calculateComparison, calculatePerInterface, TIER_LABELS, ROLE_RATES } from "./comparison-engine/engine";
+import { calculateComparison, calculatePerInterface, TIER_LABELS } from "./comparison-engine/engine";
 import { TOOL_CATALOG } from "./tool-catalog/catalog";
 import { QUALITY_GATE_PROTOCOL, getAllPhaseGates } from "./quality-gate/protocol";
 import { POSITIONING } from "./competitive-positioning/positioning";
@@ -18,20 +18,14 @@ const INTERFACE_COUNT = 1200;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+// All monetary values in 万円 (man-yen) for consistency.
+// 1 億円 = 10,000 万円
 const fmt = (n: number): string => {
-  if (n >= 1_000_000_000) return `¥${(n / 1_000_000_000).toFixed(2)}B`;
-  if (n >= 1_000_000) return `¥${(n / 1_000_000).toFixed(0)}M`;
-  if (n >= 10_000) return `¥${(n / 10_000).toFixed(0)}万`;
-  return `¥${n.toLocaleString()}`;
+  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}億円`;
+  return `${(n / 10_000).toFixed(0)}万円`;
 };
 
 const tierOrder: Tier[] = ["traditional", "tierA", "tierB", "tierC"];
-
-const phaseOrder: Record<Phase, number> = {
-  "要件定義": 0,
-  "基設計": 1,
-  "開発+単体テスト": 2,
-};
 
 function print() {
   const cmp = calculateComparison(INTERFACE_COUNT);
@@ -219,39 +213,16 @@ function print() {
   lines.push("### 見積もりの考え方");
   lines.push("");
 
-  // Core logic in 3 sentences
-  lines.push("見積もりの基本はシンプルです：");
+  // Core logic: one simple comparison, one unit
+  lines.push("```");
+  lines.push("【前提】1本のI/F = 要件10日 + 設計5日 + 開発20日 = 35人日");
+  lines.push(`         ｺﾝｻﾙ単価 = 7.5万円/日, SE単価 = 5.0万円/日`);
+  lines.push(`         1本あたり 35人日 × 加重平均 ≈ 200万円`);
   lines.push("");
-  lines.push(`1. **1本のI/Fにかかる工数**は 要件定義10日 + 設計5日 + 開発20日 = **${tradDays}人日**`);
-  lines.push(`2. **AIを使うと**各工程の工数が 70〜85% 圧縮され、1本 **${tA_days.min}〜${tA_days.max}人日** に`);
-  lines.push(`3. **1,200本にかける**と ${tradDays}人日 × 1,200 = ${(tradDays * INTERFACE_COUNT).toLocaleString()}人日 だったのが ${tA_days.min}〜${tA_days.max}人日 × 1,200 = ${(tA_days.min * INTERFACE_COUNT).toLocaleString()}〜${(tA_days.max * INTERFACE_COUNT).toLocaleString()}人日 に`);
-  lines.push("");
-
-  // Simple visual comparison
-  lines.push("| | 1本あたり工数 | 1本あたり費用 | 1,200本 総費用 |");
-  lines.push("|------|-------------|-------------|--------------|");
-  lines.push(`| **従来型** | ${tradDays}人日 | ${fmt(perIface.traditional.totalCost.min)} | ${fmt(tradCost)} |`);
-  lines.push(`| **Tier A** | ${tA_days.min}〜${tA_days.max}人日 | ${fmt(perIface.tierA.totalCost.min)}〜${fmt(perIface.tierA.totalCost.max)} | ${fmt(tA_cost.min)}〜${fmt(tA_cost.max)} |`);
-  lines.push(`| → **削減** | **−${tradDays - tA_days.max}〜−${tradDays - tA_days.min}人日** | **−${fmt(perIface.traditional.totalCost.min - perIface.tierA.totalCost.max)}〜−${fmt(perIface.traditional.totalCost.min - perIface.tierA.totalCost.min)}** | **−${fmt(tA_save)}（${Math.round(tA_save/tradCost*100)}%）** |`);
-  lines.push("");
-
-  // How the numbers are built
-  lines.push("#### 数字の内訳");
-  lines.push("");
-  lines.push(`| 工程 | 担当 | 単価 | 従来 | Tier A | 備考 |`);
-  lines.push(`|------|------|------|------|--------|------|`);
-  for (const p of perIface.traditional.phaseBreakdown) {
-    const ta = perIface.tierA.phaseBreakdown[phaseOrder[p.phase]];
-    const roleLabel = p.role === "consultant" ? "ｺﾝｻﾙ" : "SE";
-    const rate = p.role === "consultant" ? ROLE_RATES.consultant.daily : ROLE_RATES.se.daily;
-    lines.push(
-      `| ${p.phase} | ${roleLabel} | ¥${(rate/10000).toFixed(0)}万/日 | ${p.traditionalPersonDays}日 | ${ta.aiPersonDays.min}〜${ta.aiPersonDays.max}日 | ${p.traditionalPersonDays}日 → ${ta.aiPersonDays.min}〜${ta.aiPersonDays.max}日（${Math.round((1-ta.aiPersonDays.max/p.traditionalPersonDays)*100)}〜${Math.round((1-ta.aiPersonDays.min/p.traditionalPersonDays)*100)}%削減） |`
-    );
-  }
-  lines.push(`| **合計** | | | **${tradDays}日** | **${tA_days.min}〜${tA_days.max}日** | |`);
-  lines.push("");
-
-  lines.push(`${tradDays}日/${tA_days.min}日 ≈ **${(tradDays/tA_days.min).toFixed(0)}倍**の効率化。`);
+  lines.push("【従来】200万円 × 1,200本 = 24.0億円");
+  lines.push(`【Tier A】 ${fmt(perIface.tierA.totalCost.min)} × 1,200本 = ${fmt(tA_cost.min)} （${tA_days.min}人日/I/F）`);
+  lines.push(`【差額】  24.0億円 − ${fmt(tA_cost.min)} = ${fmt(tA_save)} の削減（${Math.round(tA_save/tradCost*100)}%）`);
+  lines.push("```");
   lines.push("");
 
   // ── 4. AIツール選定ガイド ──────────────────────────────────────────────────
