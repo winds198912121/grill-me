@@ -213,28 +213,26 @@ function print() {
   lines.push("### 見積もりの考え方");
   lines.push("");
 
-  // Core logic: one simple comparison, one unit
-  lines.push("```");
+  // Core logic: before/after in one table
   const p1 = perIface.traditional.phaseBreakdown[0];
   const p2 = perIface.traditional.phaseBreakdown[1];
   const p3 = perIface.traditional.phaseBreakdown[2];
+  const a1 = perIface.tierA.phaseBreakdown[0];
+  const a2 = perIface.tierA.phaseBreakdown[1];
+  const a3 = perIface.tierA.phaseBreakdown[2];
 
-  lines.push("【Step 1】1本のI/Fを作るのにかかる工数と費用（従来型）");
+  lines.push("| 工程 | 担当 | 単価 | 従来 | Tier A | 削減 |");
+  lines.push("|------|------|------|------|--------|------|");
+  lines.push(`| 要件定義 | ｺﾝｻﾙ | 7.5万円/日 | ${p1.traditionalPersonDays}日（${fmt(p1.traditionalCost)}） | ${a1.aiPersonDays.min}日（${fmt(a1.aiCost.min)}） | −${p1.traditionalPersonDays - a1.aiPersonDays.max}日（${Math.round((1 - a1.aiPersonDays.max/p1.traditionalPersonDays)*100)}%） |`);
+  lines.push(`| 基本設計 | SE | 5.0万円/日 | ${p2.traditionalPersonDays}日（${fmt(p2.traditionalCost)}） | ${a2.aiPersonDays.min}日（${fmt(a2.aiCost.min)}） | −${p2.traditionalPersonDays - a2.aiPersonDays.max}日（${Math.round((1 - a2.aiPersonDays.max/p2.traditionalPersonDays)*100)}%） |`);
+  lines.push(`| 開発+単体 | SE | 5.0万円/日 | ${p3.traditionalPersonDays}日（${fmt(p3.traditionalCost)}） | ${a3.aiPersonDays.min}日（${fmt(a3.aiCost.min)}） | −${p3.traditionalPersonDays - a3.aiPersonDays.max}日（${Math.round((1 - a3.aiPersonDays.max/p3.traditionalPersonDays)*100)}%） |`);
+  lines.push(`| **1本合計** | | | **${tradDays}人日（${fmt(perIface.traditional.totalCost.min)}）** | **${tA_days.min}人日（${fmt(perIface.tierA.totalCost.min)}）** | **−${tradDays - tA_days.max}人日（${Math.round((1 - tA_days.max/tradDays)*100)}%）** |`);
   lines.push("");
-  lines.push(`  要件定義（ｺﾝｻﾙ）: ${p1.traditionalPersonDays}日 × 7.5万円 = ${fmt(p1.traditionalCost)}`);
-  lines.push(`  基本設計（SE）:      ${p2.traditionalPersonDays}日 × 5.0万円 = ${fmt(p2.traditionalCost)}`);
-  lines.push(`  開発+単体（SE）:    ${p3.traditionalPersonDays}日 × 5.0万円 = ${fmt(p3.traditionalCost)}`);
-  lines.push(`  ─────────────────────────────`);
-  lines.push(`  1本あたり合計       ${p1.traditionalPersonDays + p2.traditionalPersonDays + p3.traditionalPersonDays}人日           ${fmt(perIface.traditional.totalCost.min)}`);
-  lines.push("");
-  lines.push(`【Step 2】1,200本にかける`);
-  lines.push(`  ${fmt(perIface.traditional.totalCost.min)} × 1,200本 = ${fmt(tradCost)}`);
-  lines.push("");
-  lines.push(`【Step 3】AI（Tier A）で同じ計算をすると`);
-  lines.push(`  1本 ${fmt(perIface.tierA.totalCost.min)} × 1,200本 = ${fmt(tA_cost.min)} （${tA_days.min}人日/I/F）`);
-  lines.push("");
-  lines.push(`【差額】${fmt(tradCost)} − ${fmt(tA_cost.min)} = ${fmt(tA_save)} の削減（${Math.round(tA_save/tradCost*100)}%）`);
-  lines.push("```");
+  lines.push(`| | 1本あたり | 1,200本 |`);
+  lines.push(`|------|---------|--------|`);
+  lines.push(`| **従来** | ${fmt(perIface.traditional.totalCost.min)} | ${fmt(tradCost)} |`);
+  lines.push(`| **Tier A** | ${fmt(perIface.tierA.totalCost.min)} | ${fmt(tA_cost.min)} |`);
+  lines.push(`| **差額** | −${fmt(perIface.traditional.totalCost.min - perIface.tierA.totalCost.min)} | **−${fmt(tA_save)}（${Math.round(tA_save/tradCost*100)}%）** |`);
   lines.push("");
 
   // ── 4. AIツール選定ガイド ──────────────────────────────────────────────────
