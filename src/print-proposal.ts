@@ -7,7 +7,7 @@
  */
 
 import { writeFileSync } from "node:fs";
-import { calculateComparison, calculatePerInterface, TIER_LABELS, ROLE_RATES, PHASES } from "./comparison-engine/engine";
+import { calculateComparison, calculatePerInterface, TIER_LABELS, ROLE_RATES } from "./comparison-engine/engine";
 import { TOOL_CATALOG } from "./tool-catalog/catalog";
 import { QUALITY_GATE_PROTOCOL, getAllPhaseGates } from "./quality-gate/protocol";
 import { POSITIONING } from "./competitive-positioning/positioning";
@@ -213,105 +213,45 @@ function print() {
   const tradCost = cmp.tiers.traditional.totalCost.min;
   const tA_cost = cmp.tiers.tierA.totalCost;
   const tA_save = tradCost - tA_cost.min;
+  const tradDays = perIface.traditional.totalPersonDays.max;
+  const tA_days = perIface.tierA.totalPersonDays;
 
-  lines.push("### 見積もり計算方式");
-  lines.push("");
-  lines.push("本見積もりはすべて以下の計算式に基づきます。");
-  lines.push("");
-
-  lines.push("#### 基本計算式");
-  lines.push("");
-  lines.push("```");
-  lines.push("総コスト = Σ ( フェーズ別工数 × 単価 × I/F数 ) + ツールライセンス費用");
-  lines.push("");
-  lines.push("フェーズ別AI工数 = 従来工数 × (1 − 圧縮率)");
-  lines.push("```");
+  lines.push("### 見積もりの考え方");
   lines.push("");
 
-  lines.push("#### 前提条件");
+  // Core logic in 3 sentences
+  lines.push("見積もりの基本はシンプルです：");
   lines.push("");
-  lines.push("| 項目 | 値 |");
-  lines.push("|------|-----|");
-  lines.push("| 対象 I/F 数 | 1,200 本 |");
-  lines.push(`| コンサルタント単価 | ¥1,500,000/月（¥${ROLE_RATES.consultant.daily.toLocaleString()}/日 = 月20営業日換算） |`);
-  lines.push(`| SE単価 | ¥1,000,000/月（¥${ROLE_RATES.se.daily.toLocaleString()}/日 = 月20営業日換算） |`);
-  lines.push(`| 対象フェーズ（請求対象） | 要件定義 + 基設計 + 開発+単体テスト（${PHASES.reduce((s,p)=>s+p.traditionalPersonDays,0)}人日/I/F） |`);
-  lines.push("| 対象外（顧客負担） | 結合テスト + UAT（30人日/I/F） |");
+  lines.push(`1. **1本のI/Fにかかる工数**は 要件定義10日 + 設計5日 + 開発20日 = **${tradDays}人日**`);
+  lines.push(`2. **AIを使うと**各工程の工数が 70〜85% 圧縮され、1本 **${tA_days.min}〜${tA_days.max}人日** に`);
+  lines.push(`3. **1,200本にかける**と ${tradDays}人日 × 1,200 = ${(tradDays * INTERFACE_COUNT).toLocaleString()}人日 だったのが ${tA_days.min}〜${tA_days.max}人日 × 1,200 = ${(tA_days.min * INTERFACE_COUNT).toLocaleString()}〜${(tA_days.max * INTERFACE_COUNT).toLocaleString()}人日 に`);
   lines.push("");
 
-  // Per-phase formula table
-  lines.push("#### フェーズ別 従来工数と費用（1本あたり）");
+  // Simple visual comparison
+  lines.push("| | 1本あたり工数 | 1本あたり費用 | 1,200本 総費用 |");
+  lines.push("|------|-------------|-------------|--------------|");
+  lines.push(`| **従来型** | ${tradDays}人日 | ${fmt(perIface.traditional.totalCost.min)} | ${fmt(tradCost)} |`);
+  lines.push(`| **Tier A** | ${tA_days.min}〜${tA_days.max}人日 | ${fmt(perIface.tierA.totalCost.min)}〜${fmt(perIface.tierA.totalCost.max)} | ${fmt(tA_cost.min)}〜${fmt(tA_cost.max)} |`);
+  lines.push(`| → **削減** | **−${tradDays - tA_days.max}〜−${tradDays - tA_days.min}人日** | **−${fmt(perIface.traditional.totalCost.min - perIface.tierA.totalCost.max)}〜−${fmt(perIface.traditional.totalCost.min - perIface.tierA.totalCost.min)}** | **−${fmt(tA_save)}（${Math.round(tA_save/tradCost*100)}%）** |`);
   lines.push("");
-  lines.push("| フェーズ | 担当 | 工数 | 単価 | 費用計算式 | 費用 |");
-  lines.push("|----------|------|------|------|-----------|------|");
+
+  // How the numbers are built
+  lines.push("#### 数字の内訳");
+  lines.push("");
+  lines.push(`| 工程 | 担当 | 単価 | 従来 | Tier A | 備考 |`);
+  lines.push(`|------|------|------|------|--------|------|`);
   for (const p of perIface.traditional.phaseBreakdown) {
-    const roleLabel = p.role === "consultant" ? "ｺﾝｻﾙﾀﾝﾄ" : "SE";
+    const ta = perIface.tierA.phaseBreakdown[phaseOrder[p.phase]];
+    const roleLabel = p.role === "consultant" ? "ｺﾝｻﾙ" : "SE";
     const rate = p.role === "consultant" ? ROLE_RATES.consultant.daily : ROLE_RATES.se.daily;
     lines.push(
-      `| ${p.phase} | ${roleLabel} | ${p.traditionalPersonDays}日 | ¥${rate.toLocaleString()}/日 | ${p.traditionalPersonDays}日 × ¥${rate.toLocaleString()} | ${fmt(p.traditionalCost)} |`
+      `| ${p.phase} | ${roleLabel} | ¥${(rate/10000).toFixed(0)}万/日 | ${p.traditionalPersonDays}日 | ${ta.aiPersonDays.min}〜${ta.aiPersonDays.max}日 | ${p.traditionalPersonDays}日 → ${ta.aiPersonDays.min}〜${ta.aiPersonDays.max}日（${Math.round((1-ta.aiPersonDays.max/p.traditionalPersonDays)*100)}〜${Math.round((1-ta.aiPersonDays.min/p.traditionalPersonDays)*100)}%削減） |`
     );
   }
-  const tradTotalDays = perIface.traditional.totalPersonDays.max;
-  lines.push(`| **合計** | | **${tradTotalDays}日** | | **${tradTotalDays}日 × 加重平均** | **${fmt(perIface.traditional.totalCost.min)}** |`);
+  lines.push(`| **合計** | | | **${tradDays}日** | **${tA_days.min}〜${tA_days.max}日** | |`);
   lines.push("");
 
-  // AI compression formula
-  lines.push("#### AI圧縮率と計算式");
-  lines.push("");
-  lines.push("| 方式 | 要件定義 工数 | 基設計 工数 | 開発+単体テスト 工数 | 計算式（1本あたり） |");
-  lines.push("|------|-------------|-----------|-------------------|-------------------|");
-  for (const tier of ["traditional", "tierA", "tierB", "tierC"] as Tier[]) {
-    const t = perIface[tier];
-    const p1 = t.phaseBreakdown[0];
-    const p2 = t.phaseBreakdown[1];
-    const p3 = t.phaseBreakdown[2];
-    const r1 = p1.role === "consultant" ? ROLE_RATES.consultant.daily : ROLE_RATES.se.daily;
-    const r2 = p2.role === "consultant" ? ROLE_RATES.consultant.daily : ROLE_RATES.se.daily;
-    const r3 = p3.role === "consultant" ? ROLE_RATES.consultant.daily : ROLE_RATES.se.daily;
-    lines.push(
-      `| ${TIER_LABELS[tier]} | ${p1.aiPersonDays.min}–${p1.aiPersonDays.max}日 | ${p2.aiPersonDays.min}–${p2.aiPersonDays.max}日 | ${p3.aiPersonDays.min}–${p3.aiPersonDays.max}日 | (${p1.aiPersonDays.min}×¥${r1.toLocaleString()} + ${p2.aiPersonDays.min}×¥${r2.toLocaleString()} + ${p3.aiPersonDays.min}×¥${r3.toLocaleString()}) ~ (${p1.aiPersonDays.max}×¥${r1.toLocaleString()} + ${p2.aiPersonDays.max}×¥${r2.toLocaleString()} + ${p3.aiPersonDays.max}×¥${r3.toLocaleString()}) |`
-    );
-  }
-  lines.push("");
-
-  // Concrete example: Tier A
-  lines.push("#### 計算例: Tier A (Claude Code) の総額算出");
-  lines.push("");
-  const ta = perIface.tierA;
-  const ta1 = ta.phaseBreakdown[0];
-  const ta2 = ta.phaseBreakdown[1];
-  const ta3 = ta.phaseBreakdown[2];
-  lines.push("```");
-  lines.push("【1本あたり AI工数】");
-  lines.push(`  要件定義:      ${ta1.traditionalPersonDays}日 × (1 − 0.70) = ${ta1.aiPersonDays.min}–${ta1.aiPersonDays.max}日（70–80%圧縮）`);
-  lines.push(`  基設計:         ${ta2.traditionalPersonDays}日 × (1 − 0.85) = ${ta2.aiPersonDays.min}–${ta2.aiPersonDays.max}日（80–90%圧縮）`);
-  lines.push(`  開発+単体テスト: ${ta3.traditionalPersonDays}日 × (1 − 0.80) = ${ta3.aiPersonDays.min}–${ta3.aiPersonDays.max}日（75–85%圧縮）`);
-  lines.push("");
-  lines.push("【1本あたり AI費用（下限）】");
-  const r1 = ta1.role === "consultant" ? ROLE_RATES.consultant.daily : ROLE_RATES.se.daily;
-  const r2 = ta2.role === "consultant" ? ROLE_RATES.consultant.daily : ROLE_RATES.se.daily;
-  const r3 = ta3.role === "consultant" ? ROLE_RATES.consultant.daily : ROLE_RATES.se.daily;
-  lines.push(`  ${ta1.aiPersonDays.min}日 × ¥${r1.toLocaleString()} = ¥${(ta1.aiPersonDays.min * r1).toLocaleString()}`);
-  lines.push(`  ${ta2.aiPersonDays.min}日 × ¥${r2.toLocaleString()} = ¥${(ta2.aiPersonDays.min * r2).toLocaleString()}`);
-  lines.push(`  ${ta3.aiPersonDays.min}日 × ¥${r3.toLocaleString()} = ¥${(ta3.aiPersonDays.min * r3).toLocaleString()}`);
-  const rawSum = ta1.aiPersonDays.min*r1 + ta2.aiPersonDays.min*r2 + ta3.aiPersonDays.min*r3;
-  lines.push(`  小計: ¥${rawSum.toLocaleString()} → 10,000円単位丸め: ${fmt(ta.totalCost.min)}`);
-  lines.push("");
-  lines.push("【1本あたり AI費用（上限）】");
-  lines.push(`  ${ta1.aiPersonDays.max}日 × ¥${r1.toLocaleString()} = ¥${(ta1.aiPersonDays.max * r1).toLocaleString()}`);
-  lines.push(`  ${ta2.aiPersonDays.max}日 × ¥${r2.toLocaleString()} = ¥${(ta2.aiPersonDays.max * r2).toLocaleString()}`);
-  lines.push(`  ${ta3.aiPersonDays.max}日 × ¥${r3.toLocaleString()} = ¥${(ta3.aiPersonDays.max * r3).toLocaleString()}`);
-  const rawSumMax = ta1.aiPersonDays.max*r1 + ta2.aiPersonDays.max*r2 + ta3.aiPersonDays.max*r3;
-  lines.push(`  小計: ¥${rawSumMax.toLocaleString()} → 10,000円単位丸め: ${fmt(ta.totalCost.max)}`);
-  lines.push("");
-  lines.push("【総額（1,200本換算）】");
-  lines.push(`  下限: ${fmt(ta.totalCost.min)} × 1,200 = ${fmt(tA_cost.min)}`);
-  lines.push(`  上限: ${fmt(ta.totalCost.max)} × 1,200 = ${fmt(tA_cost.max)}`);
-  lines.push("");
-  lines.push("【削減効果】");
-  lines.push(`  従来総額 ${fmt(tradCost)} − Tier A下限 ${fmt(tA_cost.min)} = ${fmt(tA_save)}`);
-  lines.push(`  削減率: ${Math.round(tA_save / tradCost * 100)}%`);
-  lines.push("```");
+  lines.push(`${tradDays}日/${tA_days.min}日 ≈ **${(tradDays/tA_days.min).toFixed(0)}倍**の効率化。`);
   lines.push("");
 
   // ── 4. AIツール選定ガイド ──────────────────────────────────────────────────
