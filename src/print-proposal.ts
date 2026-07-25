@@ -182,7 +182,7 @@ function print() {
 
   lines.push("### フェーズ別内訳（1本あたり）");
   lines.push("");
-  const header = "| フェーズ | 担当 | 従来 | Tier A | Tier B | Tier C |";
+  const header = "| フェーズ | 担当 | 従来 | AI活用 | Tier B | Tier C |";
   const sep =    "|----------|------|------|--------|--------|--------|";
   lines.push(header);
   lines.push(sep);
@@ -224,7 +224,7 @@ function print() {
   const a2 = perIface.tierA.phaseBreakdown[1];
   const a3 = perIface.tierA.phaseBreakdown[2];
 
-  lines.push("| 工程 | 担当 | 単価 | 従来 | Tier A | 削減 |");
+  lines.push("| 工程 | 担当 | 単価 | 従来 | AI活用 | 削減 |");
   lines.push("|------|------|------|------|--------|------|");
   lines.push(`| 要件定義 | ｺﾝｻﾙ | 7.5万円/日 | ${p1.traditionalPersonDays}日（${fmt(p1.traditionalCost)}） | ${a1.aiPersonDays.min}日（${fmt(a1.aiCost.min)}） | −${p1.traditionalPersonDays - a1.aiPersonDays.max}日（${Math.round((1 - a1.aiPersonDays.max/p1.traditionalPersonDays)*100)}%） |`);
   lines.push(`| 基本設計 | SE | 5.0万円/日 | ${p2.traditionalPersonDays}日（${fmt(p2.traditionalCost)}） | ${a2.aiPersonDays.min}日（${fmt(a2.aiCost.min)}） | −${p2.traditionalPersonDays - a2.aiPersonDays.max}日（${Math.round((1 - a2.aiPersonDays.max/p2.traditionalPersonDays)*100)}%） |`);
@@ -234,7 +234,7 @@ function print() {
   lines.push(`| | 1本あたり | 1,200本 |`);
   lines.push(`|------|---------|--------|`);
   lines.push(`| **従来** | ${fmt(perIface.traditional.totalCost.min)} | ${fmt(tradCost)} |`);
-  lines.push(`| **Tier A** | ${fmt(perIface.tierA.totalCost.min)} | ${fmt(tA_cost.min)} |`);
+  lines.push(`| **AI活用** | ${fmt(perIface.tierA.totalCost.min)} | ${fmt(tA_cost.min)} |`);
   lines.push(`| **差額** | −${fmt(perIface.traditional.totalCost.min - perIface.tierA.totalCost.min)} | **−${fmt(tA_save)}（${Math.round(tA_save/tradCost*100)}%）** |`);
   lines.push("");
 
