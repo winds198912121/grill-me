@@ -98,7 +98,7 @@ function print() {
   lines.push("");
   lines.push('  subgraph Gates["品質ゲート (Seam 2)"]');
   lines.push('    direction LR');
-  lines.push('    G1["要件定義ゲート<br/>ｺﾝｻﾙﾀﾝﾄ承認"] --> G2["基設計ゲート<br/>SE承認"] --> G3["開発+単体<br/>テストゲート<br/>SE承認"]');
+  lines.push('    G1["要件定義ゲート<br/>ｺﾝｻﾙﾀﾝﾄ承認"] --> G2["基本設計ゲート<br/>SE承認"] --> G3["開発+単体<br/>テストゲート<br/>SE承認"]');
   lines.push("  end");
   lines.push("");
   lines.push("  SU --> SO");
@@ -184,7 +184,7 @@ function print() {
   lines.push(header);
   lines.push(sep);
 
-  for (const phase of ["要件定義", "基設計", "開発+単体テスト"] as Phase[]) {
+  for (const phase of ["要件定義", "基本設計", "開発+単体テスト"] as Phase[]) {
     const trad = perIface.traditional.phaseBreakdown.find(p => p.phase === phase)!;
     const tA = perIface.tierA.phaseBreakdown.find(p => p.phase === phase)!;
     const tB = perIface.tierB.phaseBreakdown.find(p => p.phase === phase)!;
@@ -222,7 +222,7 @@ function print() {
   lines.push("【Step 1】1本のI/Fを作るのにかかる工数と費用（従来型）");
   lines.push("");
   lines.push(`  要件定義（ｺﾝｻﾙ）: ${p1.traditionalPersonDays}日 × 7.5万円 = ${fmt(p1.traditionalCost)}`);
-  lines.push(`  基設計（SE）:      ${p2.traditionalPersonDays}日 × 5.0万円 = ${fmt(p2.traditionalCost)}`);
+  lines.push(`  基本設計（SE）:      ${p2.traditionalPersonDays}日 × 5.0万円 = ${fmt(p2.traditionalCost)}`);
   lines.push(`  開発+単体（SE）:    ${p3.traditionalPersonDays}日 × 5.0万円 = ${fmt(p3.traditionalCost)}`);
   lines.push(`  ─────────────────────────────`);
   lines.push(`  1本あたり合計       ${p1.traditionalPersonDays + p2.traditionalPersonDays + p3.traditionalPersonDays}人日           ${fmt(perIface.traditional.totalCost.min)}`);

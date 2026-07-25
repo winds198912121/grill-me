@@ -32,7 +32,7 @@ export const TRADITIONAL_COST_PER_INTERFACE = 2_000_000;
 /** Billable phases (excludes 結合テスト+UAT which is client responsibility). */
 export const PHASES: PhaseConfig[] = [
   { phase: "要件定義", role: "consultant", traditionalPersonDays: 10 },
-  { phase: "基設計", role: "se", traditionalPersonDays: 5 },
+  { phase: "基本設計", role: "se", traditionalPersonDays: 5 },
   { phase: "開発+単体テスト", role: "se", traditionalPersonDays: 20 },
 ];
 
@@ -44,22 +44,22 @@ export const PHASES: PhaseConfig[] = [
 const AI_PERSON_DAYS: Record<Tier, Record<Phase, CompressionRange>> = {
   traditional: {
     要件定義: { min: 10, max: 10 },
-    基設計: { min: 5, max: 5 },
+    基本設計: { min: 5, max: 5 },
     "開発+単体テスト": { min: 20, max: 20 },
   },
   tierA: {
     要件定義: { min: 2, max: 2 },
-    基設計: { min: 3, max: 3 },
+    基本設計: { min: 3, max: 3 },
     "開発+単体テスト": { min: 5, max: 5 },
   },
   tierB: {
     要件定義: { min: 4, max: 6 },
-    基設計: { min: 1.5, max: 2.5 },
+    基本設計: { min: 1.5, max: 2.5 },
     "開発+単体テスト": { min: 7, max: 12 },
   },
   tierC: {
     要件定義: { min: 6, max: 8 },
-    基設計: { min: 2.5, max: 3.5 },
+    基本設計: { min: 2.5, max: 3.5 },
     "開発+単体テスト": { min: 12, max: 15 },
   },
 };

@@ -5,7 +5,7 @@
  * into comparative cost estimates for Traditional / Tier A / Tier B / Tier C.
  */
 
-export type Phase = "要件定義" | "基設計" | "開発+単体テスト";
+export type Phase = "要件定義" | "基本設計" | "開発+単体テスト";
 export type Role = "consultant" | "se";
 export type Tier = "traditional" | "tierA" | "tierB" | "tierC";
 

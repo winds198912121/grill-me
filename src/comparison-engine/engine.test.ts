@@ -97,8 +97,8 @@ describe("PHASES", () => {
     expect(p.traditionalPersonDays).toBe(10);
   });
 
-  it("基設計 is 5 SE days", () => {
-    const p = PHASES.find((p) => p.phase === "基設計")!;
+  it("基本設計 is 5 SE days", () => {
+    const p = PHASES.find((p) => p.phase === "基本設計")!;
     expect(p.role).toBe("se");
     expect(p.traditionalPersonDays).toBe(5);
   });
@@ -127,7 +127,7 @@ describe("calculatePhaseEstimate — traditional", () => {
     expect(r.compressionRatio).toEqual({ min: 0, max: 0 });
   });
 
-  it("基設計: 5 days, ¥250,000", () => {
+  it("基本設計: 5 days, ¥250,000", () => {
     const r = calculatePhaseEstimate(PHASES[1], "traditional");
     expect(r.traditionalCost).toBe(250_000);
     expect(r.aiPersonDays).toEqual({ min: 5, max: 5 });
@@ -150,7 +150,7 @@ describe("calculatePhaseEstimate — Tier A", () => {
     expect(r.compressionRatio).toEqual({ min: 0.8, max: 0.8 });
   });
 
-  it("基設計: 3日, ¥150,000 (40% compression)", () => {
+  it("基本設計: 3日, ¥150,000 (40% compression)", () => {
     const r = calculatePhaseEstimate(PHASES[1], "tierA");
     expect(r.aiPersonDays).toEqual({ min: 3, max: 3 });
     expect(r.aiCost).toEqual({ min: 150_000, max: 150_000 });
@@ -176,7 +176,7 @@ describe("calculatePhaseEstimate — Tier B", () => {
     expect(r.compressionRatio.max).toBe(0.6);
   });
 
-  it("基設計: 1.5–2.5 days, ¥75,000–125,000 (50–70% compression)", () => {
+  it("基本設計: 1.5–2.5 days, ¥75,000–125,000 (50–70% compression)", () => {
     const r = calculatePhaseEstimate(PHASES[1], "tierB");
     expect(r.aiPersonDays).toEqual({ min: 1.5, max: 2.5 });
     expect(r.aiCost).toEqual({ min: 75_000, max: 125_000 });

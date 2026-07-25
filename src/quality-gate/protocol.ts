@@ -205,7 +205,7 @@ const GATE_REQUIREMENTS: GateDefinition = {
 };
 
 const GATE_DESIGN: GateDefinition = {
-  phase: "基設計",
+  phase: "基本設計",
   reviewer: "SE",
   artifactsChecked: ["設計書・マッピングシート"],
   exitCriteria:
@@ -231,7 +231,7 @@ const GATE_DEVELOPMENT: GateDefinition = {
 export const QUALITY_GATE_PROTOCOL: QualityGateProtocol = {
   gates: {
     要件定義: GATE_REQUIREMENTS,
-    基設計: GATE_DESIGN,
+    基本設計: GATE_DESIGN,
     "開発+単体テスト": GATE_DEVELOPMENT,
   },
   checklists: {
@@ -256,7 +256,7 @@ export function getChecklist(artifact: ArtifactType): ReviewChecklist {
 export function getAllPhaseGates(): GateDefinition[] {
   return [
     QUALITY_GATE_PROTOCOL.gates["要件定義"],
-    QUALITY_GATE_PROTOCOL.gates["基設計"],
+    QUALITY_GATE_PROTOCOL.gates["基本設計"],
     QUALITY_GATE_PROTOCOL.gates["開発+単体テスト"],
   ];
 }

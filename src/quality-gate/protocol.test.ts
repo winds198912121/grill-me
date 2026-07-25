@@ -8,7 +8,7 @@ import {
 import type { Phase } from "../comparison-engine/types";
 import type { ArtifactType } from "./types";
 
-const ALL_PHASES: Phase[] = ["要件定義", "基設計", "開発+単体テスト"];
+const ALL_PHASES: Phase[] = ["要件定義", "基本設計", "開発+単体テスト"];
 const ALL_ARTIFACTS: ArtifactType[] = [
   "要件定義書",
   "設計書・マッピングシート",
@@ -94,8 +94,8 @@ describe("QUALITY_GATE_PROTOCOL", () => {
 
 describe("getGate", () => {
   it("returns the correct gate per phase", () => {
-    const gate = getGate("基設計");
-    expect(gate.phase).toBe("基設計");
+    const gate = getGate("基本設計");
+    expect(gate.phase).toBe("基本設計");
     expect(gate.reviewer).toBe("SE");
   });
 });
@@ -114,7 +114,7 @@ describe("getAllPhaseGates", () => {
     expect(gates).toHaveLength(3);
     expect(gates).toEqual([
       QUALITY_GATE_PROTOCOL.gates["要件定義"],
-      QUALITY_GATE_PROTOCOL.gates["基設計"],
+      QUALITY_GATE_PROTOCOL.gates["基本設計"],
       QUALITY_GATE_PROTOCOL.gates["開発+単体テスト"],
     ]);
   });

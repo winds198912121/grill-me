@@ -24,7 +24,7 @@ export const ROADMAP: ExecutionRoadmap = {
       recommendedTier: "tierA",
     },
     {
-      phase: "基設計",
+      phase: "基本設計",
       aiRole:
         "Salesforce画面のスクリーンショット + SAP DDICテーブル構造をAIに投入し、" +
         "フィールドマッピングシートと設計書を自動生成。" +
@@ -113,7 +113,7 @@ export const ROADMAP: ExecutionRoadmap = {
       order: 4,
       title: "本格採用AIツールの決定と全量展開",
       tier: "tierA",
-      timing: "基設計フェーズ開始時（要件定義完了後）",
+      timing: "基本設計フェーズ開始時（要件定義完了後）",
       action:
         "PoC評価結果に基づき、本格採用するAIツールを決定。" +
         "決定したツールのライセンスを全開発メンバーに展開。" +

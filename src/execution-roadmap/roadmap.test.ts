@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { ROADMAP } from "./roadmap";
 
-const ALL_PHASES = ["要件定義", "基設計", "開発+単体テスト"] as const;
+const ALL_PHASES = ["要件定義", "基本設計", "開発+単体テスト"] as const;
 
 describe("ROADMAP — workflows", () => {
   it("has workflow steps for all 3 billable phases", () => {
@@ -34,18 +34,18 @@ describe("ROADMAP — workflows", () => {
 
   it("workflow phases are in project order", () => {
     expect(ROADMAP.workflows[0].phase).toBe("要件定義");
-    expect(ROADMAP.workflows[1].phase).toBe("基設計");
+    expect(ROADMAP.workflows[1].phase).toBe("基本設計");
     expect(ROADMAP.workflows[2].phase).toBe("開発+単体テスト");
   });
 
   it("要件定義 input comes from client/Salesforce, not a previous phase", () => {
     const req = ROADMAP.workflows.find((w) => w.phase === "要件定義")!;
-    expect(req.inputFrom).not.toBe("基設計");
+    expect(req.inputFrom).not.toBe("基本設計");
     expect(req.inputFrom).not.toBe("開発+単体テスト");
   });
 
   it("design phase outputs include 設計書・マッピングシート", () => {
-    const design = ROADMAP.workflows.find((w) => w.phase === "基設計")!;
+    const design = ROADMAP.workflows.find((w) => w.phase === "基本設計")!;
     expect(design.outputArtifacts).toContain("設計書・マッピングシート");
   });
 
