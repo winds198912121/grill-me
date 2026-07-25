@@ -24,6 +24,9 @@ describe("PoC — artifact existence", () => {
     "02-設計書・マッピングシート.md",
     "03-ABAPコード.txt",
     "04-テスト仕様書.md",
+    "05-BTP設定手順書.md",
+    "06-BTP-iFlow設計書.md",
+    "07-BTP-マッピング設定書.md",
   ];
 
   for (const f of artifacts) {
@@ -202,11 +205,101 @@ describe("PoC — traceability across artifacts", () => {
 // ── AI compression evidence ──
 
 describe("PoC — AI compression evidence", () => {
-  it("all 4 artifacts were AI-generated with human review (this file documents it)", () => {
-    // Each artifact doc should note it was AI-generated
-    for (const f of ["01-要件定義書.md", "02-設計書・マッピングシート.md", "04-テスト仕様書.md"]) {
+  it("all 7 artifacts were AI-generated with human review", () => {
+    const all = [
+      "01-要件定義書.md", "02-設計書・マッピングシート.md",
+      "04-テスト仕様書.md", "05-BTP設定手順書.md",
+      "06-BTP-iFlow設計書.md", "07-BTP-マッピング設定書.md",
+    ];
+    for (const f of all) {
       const doc = readDoc(f);
       expect(doc).toMatch(/AI生成|自動生成|Claude|生成日|作成方法|PoC/);
     }
+  });
+});
+
+// ── BTP artifacts ──
+
+describe("PoC — BTP setup document", () => {
+  const doc = readDoc("05-BTP設定手順書.md");
+
+  it("covers Cloud Connector setup", () => {
+    expect(doc).toMatch(/Cloud Connector/);
+  });
+
+  it("covers BTP Destination configuration", () => {
+    expect(doc).toMatch(/Destination/);
+  });
+
+  it("covers Integration Suite activation", () => {
+    expect(doc).toMatch(/Integration Suite/);
+  });
+
+  it("has connectivity checklist", () => {
+    expect(doc).toMatch(/チェックリスト|確認項目/);
+  });
+
+  it("has troubleshooting guidance", () => {
+    expect(doc).toMatch(/トラブルシューティング|対処/);
+  });
+});
+
+describe("PoC — BTP iFlow design", () => {
+  const doc = readDoc("06-BTP-iFlow設計書.md");
+
+  it("references the correct BAPI", () => {
+    expect(doc).toMatch(/BAPI_SALESORDER_CREATEFROMDAT2/);
+  });
+
+  it("has JSON→XML conversion step", () => {
+    expect(doc).toMatch(/JSON.*XML|XML.*JSON/);
+  });
+
+  it("has RFC receiver configuration", () => {
+    expect(doc).toMatch(/RFC.*Receiver|RFC.*Adapter/);
+  });
+
+  it("has exception handling subprocess", () => {
+    expect(doc).toMatch(/Exception|エラー処理|リトライ/);
+  });
+
+  it("has deploy steps", () => {
+    expect(doc).toMatch(/デプロイ|Deploy/);
+  });
+
+  it("includes Mermaid diagram", () => {
+    expect(doc).toMatch(/```mermaid/);
+  });
+});
+
+describe("PoC — BTP mapping config", () => {
+  const doc = readDoc("07-BTP-マッピング設定書.md");
+
+  it("has header field mapping table", () => {
+    expect(doc).toMatch(/ORDER_HEADER_IN|SALES_ORG|DIVISION/);
+  });
+
+  it("has date conversion logic", () => {
+    expect(doc).toMatch(/DATS|YYYYMMDD|ReplaceAll|convertDate/);
+  });
+
+  it("has code conversion (distr chan / unit)", () => {
+    expect(doc).toMatch(/ValueMapping|コード変換|流通チャネル/);
+  });
+
+  it("has Groovy script for extended logic", () => {
+    expect(doc).toMatch(/groovy|Groovy|processData/);
+  });
+
+  it("has material code padding logic", () => {
+    expect(doc).toMatch(/PadLeft|padLeft|ゼロ埋め/);
+  });
+
+  it("has partner mapping (AG/WE)", () => {
+    expect(doc).toMatch(/PARTN_ROLE|AG|WE|SOLD_TO|SHIP_TO/);
+  });
+
+  it("includes Mermaid diagram", () => {
+    expect(doc).toMatch(/```mermaid/);
   });
 });
