@@ -49,10 +49,90 @@ function print() {
   lines.push(POSITIONING.executiveSummary);
   lines.push("");
 
-  // ── 2. コスト比較 ──────────────────────────────────────────────────────────
+  // ── システム全体構成図 ────────────────────────────────────────────────────
   lines.push("---");
   lines.push("");
-  lines.push("## 2. コスト比較");
+  lines.push("## 2. 全体システム構成図");
+  lines.push("");
+  lines.push("```mermaid");
+  lines.push("flowchart TB");
+  lines.push("  subgraph Users[ユーザー層]");
+  lines.push("    direction LR");
+  lines.push('    SU["営業担当<br/>1,800ユーザー<br/>(Salesforce経由)"]');
+  lines.push('    AU["経理担当<br/>直接SAP利用"]');
+  lines.push("  end");
+  lines.push("");
+  lines.push('  subgraph SF[Salesforce 層]');
+  lines.push('    direction TB');
+  lines.push('    SO["受注入力画面<br/>Sales Order Entry"]');
+  lines.push('    PO["購買発注入力画面<br/>Purchase Order Entry"]');
+  lines.push('    MD["マスタデータ管理画面<br/>Master Data Mgmt"]');
+  lines.push("  end");
+  lines.push("");
+  lines.push('  subgraph Hub["データ連携基盤 | 約1,200I/F"]');
+  lines.push('    direction LR');
+  lines.push('    IF1["会計I/F<br/>約840本<br/>仕訳伝票・債権債務"]');
+  lines.push('    IF2["販売I/F<br/>受注伝票・出荷"]');
+  lines.push('    IF3["購買I/F・マスタI/F<br/>発注伝票・得意先/仕入先"]');
+  lines.push("  end");
+  lines.push("");
+  lines.push('  subgraph SAP["SAP S/4HANA 層"]');
+  lines.push('    direction TB');
+  lines.push('    FI["会計モジュール (FI)<br/>総勘定元帳・債権債務"]');
+  lines.push('    SD["販売管理 (SD)<br/>受注・出荷・請求"]');
+  lines.push('    MM["購買管理 (MM)<br/>発注・入庫・請求照合"]');
+  lines.push('    MDM["マスタデータ<br/>得意先・仕入先・品目"]');
+  lines.push("  end");
+  lines.push("");
+  lines.push('  subgraph AI[AI支援開発パイプライン]');
+  lines.push('    direction LR');
+  lines.push('    CE["① コスト比較<br/>エンジン<br/>Seam 1"]');
+  lines.push('    CT["② ツール選定<br/>＋品質ゲート<br/>Seam 2"]');
+  lines.push('    CP["③ 競合優位性<br/>＋実行ロードマップ"]');
+  lines.push("  end");
+  lines.push("");
+  lines.push('  subgraph Gates["品質ゲート (Seam 2)"]');
+  lines.push('    direction LR');
+  lines.push('    G1["要件定義ゲート<br/>ｺﾝｻﾙﾀﾝﾄ承認"] --> G2["基設計ゲート<br/>SE承認"] --> G3["開発+単体<br/>テストゲート<br/>SE承認"]');
+  lines.push("  end");
+  lines.push("");
+  lines.push("  SU --> SO");
+  lines.push("  SU --> PO");
+  lines.push("  SU --> MD");
+  lines.push("  AU --> SAP");
+  lines.push("  SO --> IF1");
+  lines.push("  SO --> IF2");
+  lines.push("  PO --> IF3");
+  lines.push("  MD --> IF3");
+  lines.push("  IF1 --> FI");
+  lines.push("  IF2 --> SD");
+  lines.push("  IF3 --> MM");
+  lines.push("  IF3 --> MDM");
+  lines.push("  AI -.-> Hub");
+  lines.push("  Gates -.-> SF");
+  lines.push("  Gates -.-> SAP");
+  lines.push("");
+  lines.push('  style Users fill:#e1f5fe');
+  lines.push('  style SF fill:#fff9c4');
+  lines.push('  style Hub fill:#ffccbc');
+  lines.push('  style SAP fill:#c8e6c9');
+  lines.push('  style AI fill:#e1bee7');
+  lines.push('  style Gates fill:#bdbdbd');
+  lines.push("```");
+  lines.push("");
+  lines.push("**ポイント**:");
+  lines.push("");
+  lines.push("- **1,800人の営業担当者はSalesforceのみを操作**し、SAPを直接触らない");
+  lines.push("- **経理担当者のみSAP画面を直接利用**（会計業務）");
+  lines.push("- **約1,200本のI/F**がSalesforceとSAP間のデータ連携を担う（本プロジェクトの主要開発対象）");
+  lines.push("- **AI支援開発パイプライン**が全フェーズ（要件定義〜テスト）を効率化");
+  lines.push("- **3つの品質ゲート**でAI生成成果物を人間がレビュー・承認");
+  lines.push("");
+
+  // ── 3. コスト比較 ──────────────────────────────────────────────────────────
+  lines.push("---");
+  lines.push("");
+  lines.push("## 3. コスト比較");
   lines.push("");
 
   lines.push(`従来型開発とAI支援開発（3階層）のコスト比較。対象I/F数: ${INTERFACE_COUNT}本。`);
@@ -107,10 +187,10 @@ function print() {
   // ── 3. AIツール選定ガイド ──────────────────────────────────────────────────
   lines.push("---");
   lines.push("");
-  lines.push("## 3. AIツール選定ガイド");
+  lines.push("## 4. AIツール選定ガイド");
   lines.push("");
 
-  lines.push("### 3.1 3階層比較");
+  lines.push("### 4.1 3階層比較");
   lines.push("");
   lines.push("| | Tier A (Claude Code) | Tier B (Joule) | Tier C (Copilot) |");
   lines.push("|------|------|------|------|");
@@ -125,7 +205,7 @@ function print() {
   // Tier details
   for (const tier of ["tierA", "tierB", "tierC"] as Tier[]) {
     const cap = TOOL_CATALOG.capabilities[tier];
-    lines.push(`### 3.${tier === "tierA" ? "2" : tier === "tierB" ? "3" : "4"} ${cap.label}`);
+    lines.push(`### 4.${tier === "tierA" ? "2" : tier === "tierB" ? "3" : "4"} ${cap.label}`);
     lines.push("");
     lines.push("**強み**:");
     for (const s of cap.strengths) lines.push(`- ${s}`);
@@ -140,7 +220,7 @@ function print() {
   // ── 4. データプライバシー ──────────────────────────────────────────────────
   lines.push("---");
   lines.push("");
-  lines.push("## 4. データプライバシー保証");
+  lines.push("## 5. データプライバシー保証");
   lines.push("");
   lines.push("すべてのAIツールは、契約上「顧客データをモデル学習に使用しない」ことを保証しています。");
   lines.push("");
@@ -168,7 +248,7 @@ function print() {
   // ── 5. 品質ゲートプロトコル ────────────────────────────────────────────────
   lines.push("---");
   lines.push("");
-  lines.push("## 5. 品質ゲートプロトコル（Seam 2）");
+  lines.push("## 6. 品質ゲートプロトコル（Seam 2）");
   lines.push("");
   lines.push("すべてのAI生成成果物は、**人間のレビューと承認**を経て次の工程に進みます。");
   lines.push("");
@@ -202,7 +282,7 @@ function print() {
   // ── 6. 競合優位性 ─────────────────────────────────────────────────────────
   lines.push("---");
   lines.push("");
-  lines.push("## 6. 競合優位性");
+  lines.push("## 7. 競合優位性");
   lines.push("");
 
   lines.push("### 実証済みのAI開発力");
@@ -229,10 +309,10 @@ function print() {
   // ── 7. 実行ロードマップ ────────────────────────────────────────────────────
   lines.push("---");
   lines.push("");
-  lines.push("## 7. 実行ロードマップ");
+  lines.push("## 8. 実行ロードマップ");
   lines.push("");
 
-  lines.push("### 7.1 フェーズ別 AI ワークフロー");
+  lines.push("### 8.1 フェーズ別 AI ワークフロー");
   lines.push("");
   for (const w of ROADMAP.workflows) {
     const tierLabel = TIER_LABELS[w.recommendedTier];
@@ -245,7 +325,7 @@ function print() {
     lines.push("");
   }
 
-  lines.push("### 7.2 PoC計画");
+  lines.push("### 8.2 PoC計画");
   lines.push("");
   lines.push(`- **対象I/F数**: ${ROADMAP.poc.interfaceCount.min}–${ROADMAP.poc.interfaceCount.max}本`);
   lines.push(`- **実施時期**: ${ROADMAP.poc.duringPhase}フェーズ（約${ROADMAP.poc.durationWeeks}週間）`);
@@ -258,7 +338,7 @@ function print() {
   for (const sc of ROADMAP.poc.successCriteria) lines.push(`- ${sc}`);
   lines.push("");
 
-  lines.push("### 7.3 段階的導入");
+  lines.push("### 8.3 段階的導入");
   lines.push("");
   lines.push("| Step | 内容 | ツール | 時期 | 判断ゲート |");
   lines.push("|------|------|--------|------|-----------|");
@@ -267,7 +347,7 @@ function print() {
   }
   lines.push("");
 
-  lines.push("### 7.4 判断ゲート");
+  lines.push("### 8.4 判断ゲート");
   lines.push("");
   for (const dg of ROADMAP.decisionGates) {
     lines.push(`**${dg.id}**: ${dg.question}`);
@@ -283,7 +363,7 @@ function print() {
   // ── 8. 次ステップ ──────────────────────────────────────────────────────────
   lines.push("---");
   lines.push("");
-  lines.push("## 8. 次ステップ");
+  lines.push("## 9. 次ステップ");
   lines.push("");
   lines.push("- [ ] クライアントとのAI活用方針すり合わせ");
   lines.push("- [ ] 日立内でのClaude Code利用承認プロセス開始");
